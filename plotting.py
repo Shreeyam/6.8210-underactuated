@@ -29,12 +29,16 @@ def animate_quaternions(t, x, c):
 
 
 def trajectory2blender(t, x, fps=30):
+    q = x[:, 3:]
     dt = t[1] - t[0]
     frame_step = fps//dt
 
+    bpy.ops.wm.open_mainfile(filepath="cubesat_model.blend")
+
     #TODO: Finish animation keyframes using Blender quaternions
     for i in range(x.shape[0]):
-        bpy.ops.object.empty_add(location=(x[i, 0], x[i, 1], x[i, 2]))
-        bpy.context.object.name = 'trajectory_point_' + str(i)
-        bpy.context.object.empty_display_type = 'SPHERE'
-        bpy.context.object.empty_display_size = 0.1
+        bpy.ops.objects['Cube.003'].rotation_quaternion = q[i, :]
+        bpy.ops.objects['Cube.003'].keyframe_insert(data_path="rotation", frame=i * frame_step)
+
+    bpy.context.scene.frame_end = x.shape[0] * frame_step
+    bpy.ops.wm.save_as_mainfile(filepath="animation.blend")
