@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from quat_helpers import *
-import bpy
+# import bpy
 from matplotlib.animation import FuncAnimation
 
 def animate_quaternions(t, x, c):
@@ -24,7 +24,7 @@ def animate_quaternions(t, x, c):
         line.set_3d_properties([0, c_eci[frame, 2]])
         return line,
 
-    ani = FuncAnimation(fig, update, frames=range(c_eci.shape[0]), blit=True)
+    ani = FuncAnimation(fig, update, frames=range(c_eci.shape[0]), blit=True, interval=10)
     plt.show()
 
 
