@@ -25,6 +25,7 @@ def animate_quaternions(t, x, c):
         return line,
 
     ani = FuncAnimation(fig, update, frames=range(c_eci.shape[0]), blit=True, interval=10)
+    ani.save("attitude_constraints.webp")
     plt.show()
 
 

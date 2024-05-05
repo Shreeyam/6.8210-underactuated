@@ -1,10 +1,10 @@
 import numpy as np
 from quat_helpers import *
 
-def get_residuals(residual_func, x_out, u_out, time_interval):
+def get_residuals(residual_func, x_out, u_out, time_interval, J, Jinv):
     residuals = []
     for i in range(len(x_out) - 1):
-        residuals.append(residual_func(x_out[i], x_out[i+1], u_out[i], time_interval))
+        residuals.append(residual_func(x_out[i], x_out[i+1], u_out[i], time_interval, J, Jinv))
 
     return np.array(residuals)
     
