@@ -32,7 +32,7 @@ def animate_quaternions(t, x, c):
 def trajectory2blender(t, x, fps=30):
     q = x[:, 3:]
     dt = t[1] - t[0]
-    frame_step = fps//dt
+    frame_step = int(fps * dt)
 
     bpy.ops.wm.open_mainfile(filepath="cubesat_model.blend")
 
