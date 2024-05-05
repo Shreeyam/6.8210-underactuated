@@ -54,11 +54,8 @@ def optimize_trajectory_nonlinear(x0, xn, dt, N, J, abstol=1e-3, tau_max=None, a
     # Precompute Jinv to avoid recalculating it
     Jinv = np.linalg.inv(J)
 
-    if(avoidance_angle is not None):
-        theta = np.deg2rad(avoidance_angle)
-        theta = np.cos(avoidance_angle)
-
     if(attiude_constraint):
+        theta = np.deg2rad(avoidance_angle)
         A = s.dot(c.T) + c.dot(s.T) - (s.T.dot(c) + np.cos(theta)) * np.eye(3)
         b = np.cross(s.T, c.T).T
         d = s.T.dot(c) - np.cos(theta)
@@ -67,11 +64,14 @@ def optimize_trajectory_nonlinear(x0, xn, dt, N, J, abstol=1e-3, tau_max=None, a
 
     # For every time step...
     for t in range(N):
+        # Torque cost
+        prog.AddQuadraticCost(np.eye(3), np.zeros(3), torques[t])
+
         # Dynamics constraints
         residuals = satellite_discrete_dynamics(state[t], state[t+1], torques[t], dt, J, Jinv)
         for residual in residuals:
             prog.AddConstraint(residual <= abstol)
-            prog.AddConstraint(residual >= abstol)
+            prog.AddConstraint(residual >= -abstol)
 
         # Attitude constraints
         if(attiude_constraint):
