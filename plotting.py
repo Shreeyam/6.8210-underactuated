@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from quat_helpers import *
-# import bpy
+import bpy
 from matplotlib.animation import FuncAnimation
 
 def animate_quaternions(t, x, c):
@@ -36,10 +36,10 @@ def trajectory2blender(t, x, fps=30):
 
     bpy.ops.wm.open_mainfile(filepath="cubesat_model.blend")
 
-    #TODO: Finish animation keyframes using Blender quaternions
+    bpy.data.objects["Cube.003"].rotation_mode = 'QUATERNION'
     for i in range(x.shape[0]):
-        bpy.ops.objects['Cube.003'].rotation_quaternion = q[i, :]
-        bpy.ops.objects['Cube.003'].keyframe_insert(data_path="rotation", frame=i * frame_step)
+        bpy.data.objects['Cube.003'].rotation_quaternion = q[i, :]
+        bpy.data.objects['Cube.003'].keyframe_insert(data_path="rotation_quaternion", frame=int(i * frame_step))
 
-    bpy.context.scene.frame_end = x.shape[0] * frame_step
+    bpy.context.scene.frame_end = int(x.shape[0] * frame_step)
     bpy.ops.wm.save_as_mainfile(filepath="animation.blend")
