@@ -43,13 +43,15 @@ def satellite_discrete_dynamics(x, x_next, u, time_step, J, Jinv):
     
     return residuals
 
-
 def optimize_trajectory_nonlinear(x0, xn, dt, N, J, abstol=1e-3, tau_max=None, attiude_constraint=False, avoidance_angle=40, c=None, s=None):
     prog = MathematicalProgram()
 
+    # 3 angular rates, 4 quaternions
     state = prog.NewContinuousVariables(N + 1, 7, "state")
+    # 3 torques
     torques = prog.NewContinuousVariables(N + 1, 3, "torques")
 
+    # Precompute Jinv to avoid recalculating it
     Jinv = np.linalg.inv(J)
 
     if(avoidance_angle is not None):
@@ -63,15 +65,19 @@ def optimize_trajectory_nonlinear(x0, xn, dt, N, J, abstol=1e-3, tau_max=None, a
 
         Ai = np.vstack([np.hstack([d, b.T]), np.hstack([b, A])])
 
+    # For every time step...
     for t in range(N):
+        # Dynamics constraints
         residuals = satellite_discrete_dynamics(state[t], state[t+1], torques[t], dt, J, Jinv)
         for residual in residuals:
             prog.AddConstraint(residual <= abstol)
             prog.AddConstraint(residual >= abstol)
 
+        # Attitude constraints
         if(attiude_constraint):
             prog.AddConstraint(state[t, 3:].dot(Ai).dot(state[t, 3:]) <= 0)
 
+        # Torque constraints
         if(tau_max is not None):
             prog.AddConstraint(torques[t,0] <= tau_max)
             prog.AddConstraint(torques[t,1] <= tau_max)
@@ -81,6 +87,7 @@ def optimize_trajectory_nonlinear(x0, xn, dt, N, J, abstol=1e-3, tau_max=None, a
             prog.AddConstraint(torques[t,1] >= -tau_max)
             prog.AddConstraint(torques[t,2] >= -tau_max)
 
+    # Initial and final state constraints
     prog.AddLinearEqualityConstraint(state[0, :], x0)
     prog.AddLinearEqualityConstraint(state[-1, :], xn)
 
