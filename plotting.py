@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from quat_helpers import *
-import bpy
 from matplotlib.animation import FuncAnimation
 
 def animate_quaternions(t, x, c):
@@ -30,6 +29,8 @@ def animate_quaternions(t, x, c):
 
 
 def trajectory2blender(t, x, fps=30):
+    import bpy
+
     q = x[:, 3:]
     dt = t[1] - t[0]
     frame_step = int(fps * dt)
