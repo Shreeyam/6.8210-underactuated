@@ -75,6 +75,32 @@ def optimize_trajectory(
         relaxation=False,
         use_sparsity=False,
         x_init=None):
+    
+    """
+    Optimize the trajectory of a satellite using mathematical programming.
+
+    Parameters:
+    - x0 (array): Initial state of the satellite [wx, wy, wz, qw, qx, qy, qz].
+    - xn (array): Final state of the satellite [wx, wy, wz, qw, qx, qy, qz].
+    - dt (float): Time step between each state.
+    - N (int): Number of time steps.
+    - J (array): Inertia matrix of the satellite.
+    - abstol (float, optional): Absolute tolerance for the dynamics constraints. Default is 1e-3.
+    - tau_max (float, optional): Maximum torque constraint. Default is None.
+    - attitude_constraint (bool, optional): Whether to apply attitude constraints. Default is False.
+    - avoidance_angle (float, optional): Avoidance angle for attitude constraints in degrees. Default is 40.
+    - c (array, optional): Vector representing the direction of the avoidance cone. Default is None.
+    - s (array, optional): Vector representing the direction of the avoidance cone. Default is None.
+    - relaxation (bool, optional): Whether to use semidefinite relaxation. Default is False.
+    - use_sparsity (bool, optional): Whether to use sparsity in semidefinite relaxation. Default is False.
+    - x_init (array, optional): Initial guess for the state variables. Default is None.
+
+    Returns:
+    - success (bool): True if the optimization was successful, False otherwise.
+    - state_opt (array): Optimal trajectory of the satellite states [wx, wy, wz, qw, qx, qy, qz].
+    - torques_opt (array): Optimal torques applied to the satellite [tx, ty, tz].
+    """
+
     prog = MathematicalProgram()
 
     # 3 angular rates, 4 quaternions
