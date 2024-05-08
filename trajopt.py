@@ -118,7 +118,7 @@ def optimize_trajectory(
     if(attitude_constraint):
         theta = np.deg2rad(avoidance_angle)
         A = s.dot(c.T) + c.dot(s.T) - (s.T.dot(c) + np.cos(theta)) * np.eye(3)
-        b = np.cross(s.T, c.T).T
+        b = -np.cross(s.T, c.T).T
         d = s.T.dot(c) - np.cos(theta)
         
         Ai = np.vstack([np.hstack([d, b.T]), np.hstack([b, A])])
@@ -166,8 +166,6 @@ def optimize_trajectory(
         else:
             prog = MakeSemidefiniteRelaxation(prog)
             
-        print(prog)
-
     print("Solving...")
     result = Solve(prog)
     print("Solved!")
