@@ -60,7 +60,7 @@ def generate_linear_quaternion_trajectory(x0, xn, N):
 
     return np.concatenate([np.zeros((N + 1, 3)), q], axis=1)
 
-def optimize_trajectory_nonlinear(
+def optimize_trajectory(
         x0, 
         xn, 
         dt, 
