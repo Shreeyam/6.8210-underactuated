@@ -1,23 +1,21 @@
 import numpy as np
 import math
+import os
+import pathlib
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as p3
 import matplotlib.animation as animation
 
+from pathlib import Path
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter, MultipleLocator
 from mpl_toolkits.mplot3d import Axes3D
 from itertools import product, combinations
 from numpy import sin, cos
+from functools import partial
 
-%matplotlib widget 
+#%matplotlib widget 
 
-'''
-TO IMPORT THIS TO CURRENT INFRASTRUCTURE:
-from plotting2.py import *
-
-once state and control trajectories are generated, plotting() with the details provided below
-'''
 
 #SOME FUNCTIONS THAT WILL COME IN HANDY
 
@@ -115,6 +113,19 @@ def power_to_energy(powers):
     '''    
     return sum(powers)
 
+
+def filepath_constructer(rw, tc, trial, label):
+    t = 'tc' if tc else 'ntc'
+    relative_path = f"trials/{rw}rw/{t}/{trial}/{label}"
+    almost_full_path = os.path.join(pathlib.Path(__file__).parent.resolve(), relative_path) #run this one in plotting2.py
+    #almost_full_path = os.path.join(Path().absolute(), relative_path) #if jupyter notebook run this
+    name = f"{rw}rw_{t}_{trial}_{label}"
+
+    if not os.path.exists(os.path.join(almost_full_path,name)):
+        os.makedirs(os.path.join(almost_full_path,name))
+
+    return os.path.join(almost_full_path,name)
+
 '''
 COMMENCE PLOTTING INFRASTRUCTURE
 
@@ -124,7 +135,7 @@ COMMENCE PLOTTING INFRASTRUCTURE
 '''
 
 
-def plot_quat_traj(state):
+def plot_quat_traj(state, rw, tc, trial, label):
     plt.figure()
     plt.title("Quaternion Trajectory")
     plt.xlabel('t')
@@ -137,8 +148,11 @@ def plot_quat_traj(state):
     plt.legend(fontsize=10, loc='upper left', shadow=True, frameon=False, ncol=1)
     plt.show()
 
+    plt.savefig(os.path.join(filepath_constructer(rw, tc, trial, label), 'state.png'))
+    np.savetxt(os.path.join(filepath_constructer(rw, tc, trial, label), 'state.csv'), state, delimiter=",")
 
-def plot_control_traj(control):
+
+def plot_control_traj(control, rw, tc, trial, label):
     ''' 
     This function accepts a control trajectory and plots it + estimates power consumption
     '''
@@ -159,8 +173,11 @@ def plot_control_traj(control):
     plt.legend(fontsize=10, loc='lower left', shadow=True, frameon=False, ncol=1)
     plt.show()
 
+    plt.savefig(os.path.join(filepath_constructer(rw, tc, trial, label), 'control.png'))
+    np.savetxt(os.path.join(filepath_constructer(rw, tc, trial, label), 'control.csv'), control, delimiter=",")
 
-def plot_angle_plot(state, camera, sun, angle):
+
+def plot_angle_plot(state, camera, sun, angle, rw, tc, trial, label):
     theta = quat_to_angle(state, camera, sun)
 
     plt.figure()
@@ -174,9 +191,12 @@ def plot_angle_plot(state, camera, sun, angle):
     plt.legend(fontsize=10, loc='lower left', shadow=True, frameon=False, ncol=1)
     plt.show()
 
+    plt.savefig(os.path.join(filepath_constructer(rw, tc, trial, label), 'angle.png'))
+    np.savetxt(os.path.join(filepath_constructer(rw, tc, trial, label), 'angle.csv'), theta, delimiter=",")
+
 
 #ANIMATION PLOTTING
-def update_box(num):
+def update_box(num, state):
     ax = plt.gca()
     ax.cla()
 
@@ -224,7 +244,7 @@ def animate(state):
 
     ax.grid(True)
 
-    cube_ani = animation.FuncAnimation(fig, update_box, 90, interval=90, blit=False,repeat_delay=1000 )
+    cube_ani = animation.FuncAnimation(fig, func=partial(update_box, state=state), frames=90, interval=90, blit=True,repeat_delay=1000 )
     cube_ani.save("test.gif")
 
 
@@ -233,25 +253,29 @@ def animate(state):
 THE ALMIGHTY PLOTTER
 '''
 
-def plotter(state, control, camera, sun, angle, quat_traj = False, control_traj = False, angle_plot = False, anim = False):
+def plotter(state, control, camera, sun, angle, rw, tc, trial, label = 'no_label', quat_traj = False, control_traj = False, angle_plot = False, anim = False):
     ''' 
     plotter accepts:
         - state trajectory of shape Nx7, with entries [wx,wy,wz,qx,qy,qz,qw] for each time step
         - control trajectory of shape Nx3, with entries [ux,uy,uz] for each time step
         - angle (for keep-out angle plot)
-        - boolean for each plot you want (quat_traj = True, control_traj = True, angle_plot = True, anim = True)
+        - boolean for each plot you want to show AND save (quat_traj = True, control_traj = True, angle_plot = True, anim = True)
+        - # reaction wheels for saving purposes
+        - torque constraints or not for saving purposes (boolean)
+        - trial #
+        - user-fed label -- HERE, feed "SDPdense", or "linear_interp", or "SDPsparse", etc.
     
-    returns: plots of choosing
+    returns: plots of choosing + saves them with convention: #rw > torque constraint or not > trial > case
+    e.g. 3rw_tc_2_SDPdense_angle_state.csv
 
     example call: plotter(state, control, np.array([0, 0, 1]), np.array([0.75, 0.433, 0.5]), 40, quat_traj = True, control_traj = True, angle_plot = True, anim = True)
     '''
 
     if quat_traj:
-        plot_quat_traj(state)
+        plot_quat_traj(state, rw, tc, trial, label)
     if control_traj:
-        plot_control_traj(control)
+        plot_control_traj(control, rw, tc, trial, label)
     if angle_plot:
-        plot_angle_plot(state, camera, sun, angle)
+        plot_angle_plot(state, camera, sun, angle, rw, tc, trial, label)
     if anim:
-        animate(state)
-    
+        animate(state) #need to fix this ^
